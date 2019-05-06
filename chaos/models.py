@@ -1112,10 +1112,19 @@ class Disruption(TimestampMixin, db.Model):
     def __get_history_join_tables(cls):
         join_tables = []
         join_tables.append('(SELECT * FROM (' \
-                           ' SELECT created_at, updated_at,id,reference,note,start_publication_date,end_publication_date,version,client_id , contributor_id,cause_id,status::text from public.disruption where public.disruption.id = :disruption_id UNION' \
-                           ' SELECT created_at, updated_at,disruption_id as id,reference,note,start_publication_date,end_publication_date,version,client_id , contributor_id,cause_id,status from history.disruption where history.disruption.disruption_id = :disruption_id'\
+                           ' SELECT null AS int_id, created_at, updated_at,id,reference,note,start_publication_date,end_publication_date,version,client_id , contributor_id,cause_id,status::text' \
+                           ' FROM public.disruption where public.disruption.id = :disruption_id UNION' \
+                           ' SELECT id AS int_id, created_at, updated_at,disruption_id as id,reference,note,start_publication_date,end_publication_date,version,client_id , contributor_id,cause_id,status' \
+                           ' FROM history.disruption where history.disruption.disruption_id = :disruption_id'\
                            ') AS disruption_union ORDER BY version, updated_at) AS d')
-        join_tables.append('LEFT JOIN impact i ON (i.disruption_id = d.id)')
+        join_tables.append('LEFT JOIN LATERAL (SELECT * FROM (' \
+                           ' SELECT id, created_at, updated_at, disruption_id, status::text, severity_id, send_notifications, version, notification_date' \
+                           ' FROM PUBLIC.impact WHERE  PUBLIC.impact.disruption_id = :disruption_id UNION' \
+                           ' SELECT impact_id as id, created_at, updated_at, disruption_uuid, status, severity_id, send_notifications, version, notification_date' \
+                           ' FROM history.impact WHERE history.impact.disruption_id = d.int_id' \
+                           ' ) AS disruption_impact_union' \
+                           ' ) AS i' \
+                           ' ON TRUE')
         join_tables.append('LEFT JOIN cause c ON (d.cause_id = c.id)')
         join_tables.append('LEFT JOIN category ctg ON (c.category_id = ctg.id)')
         join_tables.append('LEFT JOIN associate_wording_cause awc ON (c.id = awc.cause_id)')
