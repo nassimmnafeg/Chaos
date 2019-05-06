@@ -1150,8 +1150,14 @@ class Disruption(TimestampMixin, db.Model):
                            ' public.associate_disruption_pt_object.disruption_id = public.disruption.id) UNION' \
                            ' SELECT disruption_id, pt_object_id, version FROM history.associate_disruption_pt_object where history.associate_disruption_pt_object.disruption_id = :disruption_id) AS disruption_pt_object_union' \
                            ') AS adpo ON (adpo.disruption_id = d.id AND d.version=adpo.version)')
-        join_tables.append('LEFT JOIN pt_object AS localization ON (localization.id = adpo.pt_object_id)')
-        join_tables.append('LEFT JOIN associate_impact_pt_object AS aipto ON (aipto.impact_id = i.id)')
+        join_tables.append(' LEFT JOIN pt_object AS localization ON (localization.id = adpo.pt_object_id)')
+        join_tables.append(' LEFT JOIN LATERAL ( SELECT * FROM (' \
+                           ' SELECT impact_id, pt_object_id, NULL AS version FROM public.associate_impact_pt_object' \
+                           ' WHERE public.associate_impact_pt_object.impact_id=i.id' \
+                           ' UNION SELECT impact_id, pt_object_id, version FROM history.associate_impact_pt_object' \
+                           ' WHERE history.associate_impact_pt_object.impact_id=i.id AND history.associate_impact_pt_object.version = i.version' \
+                           ') AS aipto_union' \
+                           ')AS aipto ON TRUE')
         join_tables.append('LEFT JOIN pt_object AS po ON (po.id = aipto.pt_object_id)')
         join_tables.append('LEFT JOIN application_periods AS ap ON (ap.impact_id = i.id)')
         join_tables.append('LEFT JOIN message AS m ON (m.impact_id = i.id)')
