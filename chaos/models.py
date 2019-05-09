@@ -1120,7 +1120,7 @@ class Disruption(TimestampMixin, db.Model):
         join_tables.append('LEFT JOIN LATERAL (SELECT * FROM (' \
                            ' SELECT id, created_at, updated_at, disruption_id, status::text, severity_id, send_notifications, version, notification_date' \
                            ' FROM PUBLIC.impact WHERE  PUBLIC.impact.disruption_id = :disruption_id UNION' \
-                           ' SELECT impact_id as id, created_at, updated_at, disruption_uuid, status, severity_id, send_notifications, version, notification_date' \
+                           ' SELECT public_id as id, public_created_at, public_updated_at, public_disruption_id, public_status, public_severity_id, public_send_notifications, public_version, public_notification_date' \
                            ' FROM history.impact WHERE history.impact.disruption_id = d.int_id' \
                            ' ) AS disruption_impact_union' \
                            ' ) AS i' \
@@ -1154,8 +1154,8 @@ class Disruption(TimestampMixin, db.Model):
         join_tables.append(' LEFT JOIN LATERAL ( SELECT * FROM (' \
                            ' SELECT impact_id, pt_object_id, NULL AS version FROM public.associate_impact_pt_object' \
                            ' WHERE public.associate_impact_pt_object.impact_id=i.id' \
-                           ' UNION SELECT impact_id, pt_object_id, version FROM history.associate_impact_pt_object' \
-                           ' WHERE history.associate_impact_pt_object.impact_id=i.id AND history.associate_impact_pt_object.version = i.version' \
+                           ' UNION SELECT public_impact_id, public_pt_object_id, public_impact_version FROM history.associate_impact_pt_object' \
+                           ' WHERE history.associate_impact_pt_object.public_impact_id=i.id AND history.associate_impact_pt_object.public_impact_version = i.version' \
                            ') AS aipto_union' \
                            ')AS aipto ON TRUE')
         join_tables.append('LEFT JOIN pt_object AS po ON (po.id = aipto.pt_object_id)')
