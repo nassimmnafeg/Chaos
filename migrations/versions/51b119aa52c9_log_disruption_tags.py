@@ -21,6 +21,7 @@ def upgrade():
         sa.Column('id',              sa.Integer(),  nullable=False, autoincrement=True),
         sa.Column('tag_id',          sa.Integer(),  nullable=False),
         sa.Column('disruption_id',   sa.Integer(),  nullable=False),
+        sa.Column('triggered_by',    sa.Text(),     nullable=True),
         sa.PrimaryKeyConstraint('id'),
         schema='history'
     )
@@ -30,20 +31,43 @@ def upgrade():
         'CREATE OR REPLACE FUNCTION log_associate_disruption_tag_history() RETURNS TRIGGER '
         'AS $log_associate_disruption_tag_history$ '
         ' DECLARE '
-        '   tag_id int;'
-        '   disruption_id int;'
+        '   history_tag_id int;'
+        '   history_disruption_id int;'
         ''
         '    BEGIN'
-        '       tag_id = (SELECT id FROM history.tag AS ht WHERE ht.public_id = NEW.tag_id ORDER BY ht.id DESC LIMIT 1);'
-        '       disruption_id = (SELECT id FROM history.disruption AS hd WHERE hd.public_id = NEW.disruption_id ORDER BY hd.id DESC LIMIT 1);'
-        ''
-        '       INSERT INTO history.associate_disruption_tag (tag_id, disruption_id) VALUES (tag_id, disruption_id);'
+        '       history_tag_id = (SELECT id FROM history.tag AS ht WHERE ht.public_id = NEW.tag_id ORDER BY ht.id DESC LIMIT 1);'
+        '       history_disruption_id = (SELECT id FROM history.disruption AS hd WHERE hd.public_id = NEW.disruption_id ORDER BY hd.id DESC LIMIT 1);'
+        '       '
+        '       DELETE FROM history.associate_disruption_tag AS hadt WHERE hadt.disruption_id = history_disruption_id AND triggered_by = \'log_disruption_history_changing\';'
+        '       INSERT INTO history.associate_disruption_tag (tag_id, disruption_id, triggered_by) VALUES (history_tag_id, history_disruption_id, \'log_associate_disruption_tag_history\');'
         '       RETURN NULL;'
         '    END;'
         ' $log_associate_disruption_tag_history$ LANGUAGE plpgsql;'
     )
 
+    log_disruption_history_changing = (
+        'CREATE OR REPLACE FUNCTION log_disruption_history_changing() RETURNS TRIGGER '
+        'AS $BODY$ '
+        ' DECLARE '
+        '        disruption_tags_count int; '
+        '        tag_id int; '
+        '        disruption_id int; '
+        ''
+        '    BEGIN'
+        '        disruption_id = NEW.ID;'
+        '        disruption_tags_count = (SELECT COUNT(1) FROM history.associate_disruption_tag hadt WHERE hadt.disruption_id = NEW.ID);'
+        '        IF disruption_tags_count <1 THEN'
+        '            FOR tag_id IN SELECT id AS tag_id FROM history.tag AS ht WHERE ht.public_id IN ( SELECT padt.tag_id FROM public.associate_disruption_tag AS padt WHERE  padt.disruption_id = (SELECT hd.public_id FROM history.disruption AS hd WHERE hd.id = NEW.id)) LOOP'
+        '                INSERT INTO history.associate_disruption_tag (tag_id, disruption_id, triggered_by) VALUES (tag_id, NEW.ID, \'log_disruption_history_changing\');'
+        '            END LOOP;'
+        '       END IF;'
+        '       RETURN NULL;'
+        '    END;'
+        ' $BODY$ LANGUAGE plpgsql;'
+    )
+
     op.execute(log_associate_disruption_tag_history_function)
+    op.execute(log_disruption_history_changing)
 
     # create history logger trigger
     create_associate_disruption_tag_history_trigger = (
@@ -53,8 +77,16 @@ def upgrade():
     )
     op.execute(create_associate_disruption_tag_history_trigger)
 
+    log_disruption_history_changing_trigger = (
+        'CREATE TRIGGER log_disruption_history_changing '
+        '   AFTER INSERT OR UPDATE ON history.disruption '
+        '       FOR EACH ROW EXECUTE PROCEDURE log_disruption_history_changing()'
+    )
+    op.execute(log_disruption_history_changing_trigger)
 
 def downgrade():
+    op.execute('DROP TRIGGER IF EXISTS log_disruption_history_changing ON history.disruption')
+    op.execute('DROP FUNCTION IF EXISTS history.log_disruption_history_changing()')
     op.execute('DROP TRIGGER IF EXISTS log_associate_disruption_tag_history ON public.associate_disruption_tag')
     op.execute('DROP FUNCTION IF EXISTS public.log_associate_disruption_tag_history()')
     op.drop_table('associate_disruption_tag', schema='history')

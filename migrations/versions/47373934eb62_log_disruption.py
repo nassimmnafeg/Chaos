@@ -34,6 +34,39 @@ def upgrade():
         schema='history'
     )
 
+    # copy disruptions from public schema into history
+    copy_table_query = (
+        'INSERT INTO history.disruption ('
+        '       public_id,'
+        '       public_reference,'
+        '       public_note,'
+        '       public_status,'
+        '       public_end_publication_date,'
+        '       public_start_publication_date,'
+        '       public_cause_id,'
+        '       public_client_id,'
+        '       public_contributor_id,'
+        '       public_version'
+        ')'
+        '   SELECT '
+        '       id,'
+        '       reference,'
+        '       note,'
+        '       status,'
+        '       end_publication_date,'
+        '       start_publication_date,'
+        '       cause_id,'
+        '       client_id,'
+        '       contributor_id,'
+        '       version'
+        '   FROM '
+        '       public.disruption '
+        '   WHERE '
+        '       status != \'archived\''
+        ';'
+    )
+    op.execute(copy_table_query)
+
     # create history logger function
     log_disruption_history_function = (
         'CREATE OR REPLACE FUNCTION log_disruption_history() RETURNS TRIGGER '
