@@ -1181,20 +1181,35 @@ class Disruption(TimestampMixin, db.Model):
 
     @classmethod
     def get_history_by_id(cls, disruption_id):
-        query_parts = cls.__get_history_query_parts()
-        join_tables = cls.__get_history_join_tables()
-        columns = ','.join(query_parts['select_columns'])
-        tables = ' '.join(join_tables)
-        order = ','.join(query_parts['order_by'])
+        query = 'SELECT ' \
+            ' hd.public_id AS id,' \
+            '   hd.public_reference AS reference,'\
+            '   hd.public_note AS note,' \
+            '   hd.public_status AS status,' \
+            '   hd.public_version AS version,' \
+            '   hd.public_created_at AS created_at,' \
+            '   hd.public_updated_at AS updated_at,' \
+            '   hd.public_start_publication_date AS start_publication_date,' \
+            '   hd.public_end_publication_date AS end_publication_date,' \
+            '   ht.public_id AS tag_id,' \
+            '   ht.public_name AS tag_name,' \
+            '   ht.public_created_at AS tag_created_at,' \
+            '   ht.public_updated_at AS tag_updated_at' \
+            ' FROM ' \
+            '    history.disruption AS hd' \
+            '    LEFT JOIN history.associate_disruption_tag AS hadt ON (hd.id = hadt.disruption_id)' \
+            '    LEFT JOIN history.tag ht ON (hadt.tag_id = ht.id)' \
+            ' WHERE ' \
+            '   hd.public_id = :disruptionId ' \
+            ' ORDER BY ' \
+            '   hd.public_updated_at DESC'
 
-        query = 'SELECT %s FROM %s ORDER BY %s' % (columns, tables, order)
 
-        stmt = text(query)
-        stmt = stmt.bindparams(bindparam('disruption_id', type_=db.String))
-        vars = {}
-        vars['disruption_id'] = disruption_id
+        stmt = text(query).\
+            bindparams(disruptionId=disruption_id)
 
-        return db.engine.execute(stmt, vars)
+        # stmt = stmt.bindparams(bindparam("disruptionId", type_=db.String))
+        return db.engine.execute(stmt)
 
 
     @classmethod
@@ -1220,6 +1235,22 @@ class Disruption(TimestampMixin, db.Model):
             line_section=line_section,
             statuses=statuses
         )
+
+    @classmethod
+    def get_disruption_history(cls, disruption_id):
+        query = cls.query.filter(cls.status == 'published')
+        query = query.filter(cls.contributor_id == contributor_id)
+        query = query.filter(
+            between(get_current_time(), cls.start_publication_date, cls.end_publication_date))
+        return query.all()
+
+        return cls.query.filter_by(
+            property_id=property_id,
+            disruption_id=disruption_id,
+            value=value
+        ).first()
+
+        return cls.get_query_with_args()
 
     @property
     def publication_status(self):
@@ -2259,3 +2290,33 @@ class Export(TimestampMixin, db.Model):
         vars['is_visible'] = True
 
         return db.engine.execute(stmt, vars)
+
+class DisruptionHistory():
+    @classmethod
+    def get_by_public_id(cls, id):
+        query = 'SELECT ' \
+            '   hd.id AS id,' \
+            '   hd.public_id AS public_id,' \
+            '   hd.public_reference AS reference,'\
+            '   hd.public_note AS note,' \
+            '   hd.public_status AS status,' \
+            '   hd.public_version AS version,' \
+            '   hd.public_created_at AS created_at,' \
+            '   hd.public_updated_at AS updated_at,' \
+            '   hd.public_start_publication_date AS start_publication_date,' \
+            '   hd.public_end_publication_date AS end_publication_date,' \
+            '   ht.public_id AS tag_id,' \
+            '   ht.public_name AS tag_name,' \
+            '   ht.public_created_at AS tag_created_at,' \
+            '   ht.public_updated_at AS tag_updated_at' \
+            ' FROM ' \
+            '    history.disruption AS hd' \
+            '    LEFT JOIN history.associate_disruption_tag AS hadt ON (hd.id = hadt.disruption_id)' \
+            '    LEFT JOIN history.tag ht ON (hadt.tag_id = ht.id)' \
+            ' WHERE ' \
+            '   hd.public_id = :disruptionId ' \
+            ' ORDER BY ' \
+            '   hd.public_version DESC'
+
+        stmt = text(query).bindparams(disruptionId=id)
+        return db.engine.execute(stmt)

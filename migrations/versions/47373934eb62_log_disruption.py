@@ -30,6 +30,8 @@ def upgrade():
         sa.Column('public_client_id',               UUID(),         nullable=False),
         sa.Column('public_contributor_id',          UUID(),         nullable=False),
         sa.Column('public_version',                 sa.Integer(),   nullable=False),
+        sa.Column('public_created_at',              sa.DateTime(),  nullable=True),
+        sa.Column('public_updated_at',              sa.DateTime(),  nullable=True),
         sa.PrimaryKeyConstraint('id'),
         schema='history'
     )
@@ -46,7 +48,9 @@ def upgrade():
         '       public_cause_id,'
         '       public_client_id,'
         '       public_contributor_id,'
-        '       public_version'
+        '       public_version,'
+        '       public_created_at,'
+        '       public_updated_at'
         ')'
         '   SELECT '
         '       id,'
@@ -58,7 +62,9 @@ def upgrade():
         '       cause_id,'
         '       client_id,'
         '       contributor_id,'
-        '       version'
+        '       version,'
+        '       created_at,'
+        '       updated_at'
         '   FROM '
         '       public.disruption '
         '   WHERE '
