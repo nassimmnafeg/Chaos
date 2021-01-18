@@ -2053,6 +2053,12 @@ components:
   schemas:
     application_period_pattern:
       type: object
+      required:
+        - start_date
+        - end_date
+        - weekly_pattern
+        - time_slots
+        - time_zone
       properties:
         end_date:
           type: string
@@ -2067,6 +2073,7 @@ components:
 
             it should be marked with 1, otherwise 0
           type: string
+          example: "0110000"
         time_slots:
           description: List with time slots whitin impact is active
           type: array
@@ -2076,9 +2083,14 @@ components:
               begin:
                 type: string
                 description: Start time (Format HH:MM)
+                example: "13:45"
               end:
                 type: string
                 description: Start time (Format HH:MM)
+                example: "15:30"
+        time_zone:
+          type: string
+          example: Europe/Paris
     bad_id:
       type: object
       properties:
