@@ -2077,8 +2077,13 @@ components:
         time_slots:
           description: List with time slots whitin impact is active
           type: array
+          uniqueItems: true
+          minItems: 1
           items:
             type: object
+            required:
+              - begin
+              - end
             properties:
               begin:
                 type: string
