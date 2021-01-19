@@ -187,6 +187,7 @@ Feature: Manipulate impacts in a Disruption
         And the field "impact.application_periods" should exist
         And the field "impact.severity.wording" should be "good news"
         And the field "impact.application_period_patterns" should have a size of 1
+        And the field "impact.application_period_patterns.0.time_zone" should be "Europe/Paris"
         And the field "impact.application_period_patterns.0.time_slots" should have a size of 2
         And the field "impact.application_periods" should have a size of 10
         And the field "impact.application_periods" should contain all of "{"begin": "2015-02-02T06:45:00Z", "end": "2015-02-02T08:30:00Z"}"

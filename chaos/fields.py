@@ -548,7 +548,7 @@ application_period_pattern_fields = {
         fields.Nested(time_slot_fields, display_null=False),
         attribute='time_slots'
     ),
-    'time_zone': fields.String(attribute='timezone')
+    'time_zone': fields.String(attribute='timezone') or fields.String
 }
 
 impact_fields = {
