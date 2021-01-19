@@ -2051,6 +2051,51 @@ components:
             $ref: "#/components/schemas/disruption_update"
       description: Disruption that needs to be updated
   schemas:
+    application_period_pattern_create:
+      type: object
+      required:
+        - start_date
+        - end_date
+        - weekly_pattern
+        - time_slots
+        - time_zone
+      properties:
+        end_date:
+          type: string
+          format: date
+        start_date:
+          type: string
+          format: date
+        weekly_pattern:
+          description: >
+            Days of week beginning at monday. If notification on given day is
+            active,
+
+            it should be marked with 1, otherwise 0
+          type: string
+          example: "0110000"
+        time_slots:
+          description: List with time slots whitin impact is active
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            type: object
+            required:
+              - begin
+              - end
+            properties:
+              begin:
+                type: string
+                description: Start time (Format HH:MM)
+                example: "13:45"
+              end:
+                type: string
+                description: Start time (Format HH:MM)
+                example: "15:30"
+        time_zone:
+          type: string
+          example: Europe/Paris
     application_period_pattern:
       type: object
       properties:
@@ -2067,18 +2112,26 @@ components:
 
             it should be marked with 1, otherwise 0
           type: string
+          example: "0110000"
         time_slots:
           description: List with time slots whitin impact is active
           type: array
+          uniqueItems: true
+          minItems: 1
           items:
             type: object
             properties:
               begin:
                 type: string
                 description: Start time (Format HH:MM)
+                example: "13:45"
               end:
                 type: string
                 description: Start time (Format HH:MM)
+                example: "15:30"
+        time_zone:
+          type: string
+          example: Europe/Paris
     bad_id:
       type: object
       properties:
@@ -2863,14 +2916,10 @@ components:
       properties:
         application_period_patterns:
           type: array
-          description: Either application_period_patterns or application_periods could be
-            used
           items:
             $ref: "#/components/schemas/application_period_pattern"
         application_periods:
           type: array
-          description: Either application_period_patterns or application_periods could be
-            used
           items:
             $ref: "#/components/schemas/period"
         created_at:
@@ -2928,10 +2977,14 @@ components:
       properties:
         application_period_patterns:
           type: array
+          description: Either application_period_patterns or application_periods could be
+            used
           items:
-            $ref: "#/components/schemas/application_period_pattern"
+            $ref: "#/components/schemas/application_period_pattern_create"
         application_periods:
           type: array
+          description: Either application_period_patterns or application_periods could be
+            used
           items:
             $ref: "#/components/schemas/period_create"
         severity:
