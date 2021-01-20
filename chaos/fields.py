@@ -231,6 +231,15 @@ class FieldLinks(fields.Raw):
         return None
 
 
+class FieldTimezone(fields.Raw):
+    def output(self, key, obj):
+        if hasattr(obj, 'timezone'):
+            return obj.timezone
+        if hasattr(obj, 'time_zone'):
+            return obj.time_zone
+        return None
+
+
 class ComputeDisruptionStatus(fields.Raw):
     def output(self, key, obj):
         current_datetime = get_current_time()
@@ -548,7 +557,7 @@ application_period_pattern_fields = {
         fields.Nested(time_slot_fields, display_null=False),
         attribute='time_slots'
     ),
-    'time_zone': fields.String(attribute='timezone') or fields.String
+    'time_zone': FieldTimezone()
 }
 
 impact_fields = {
