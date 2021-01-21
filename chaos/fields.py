@@ -233,10 +233,10 @@ class FieldLinks(fields.Raw):
 
 class FieldTimezone(fields.Raw):
     def output(self, key, obj):
-        if hasattr(obj, 'timezone'):
-            return obj.timezone
-        if hasattr(obj, 'time_zone'):
-            return obj.time_zone
+        if obj.has_key('timezone'):
+            return obj['timezone']
+        if obj.has_key('time_zone'):
+            return obj['time_zone']
         return None
 
 
