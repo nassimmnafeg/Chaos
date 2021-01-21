@@ -2553,6 +2553,84 @@ components:
             - start_point
             - end_point
             - line
+    impact_object_rail_section:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          description: Impacted PT object ID in navitia
+          type: string
+          maxLength: 250
+        type:
+          description: Impacted PT object type in navitia
+          type: string
+          enum:
+            - rail_section
+      rail_section:
+          type: object
+          properties:
+            start_point:
+              type: object
+              properties:
+                id:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                    - stop_area
+              required:
+                - id
+                - type
+            end_point:
+              type: object
+              properties:
+                id:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                    - stop_area
+              required:
+                - id
+                - type
+            blocked_stop_areas:
+              type: array
+                items:
+                  description: Id of stop_area object
+                  type: string
+            route_patterns:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                    enum:
+                      - route
+                required:
+                  - id
+                  - type
+            line:
+              type: object
+              properties:
+                id:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                    - line
+              required:
+                - id
+                - type
+          required:
+            - start_point
+            - end_point
+            - blocked_stop_areas
+            - line
     disruption_impact_message:
       type: object
       required:
@@ -2953,6 +3031,7 @@ components:
             oneOf:
               - $ref: "#/components/schemas/impact_object"
               - $ref: "#/components/schemas/impact_object_line_section"
+              - $ref: "#/components/schemas/impact_object_rail_section"
         send_notifications:
           description: If notification should be send or not
           type: boolean
