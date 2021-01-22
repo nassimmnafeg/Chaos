@@ -2568,7 +2568,7 @@ components:
           type: string
           enum:
             - rail_section
-      rail_section:
+        rail_section:
           type: object
           properties:
             start_point:
@@ -2597,23 +2597,34 @@ components:
                 - type
             blocked_stop_areas:
               type: array
-                items:
-                  description: Id of stop_area object
-                  type: string
-            route_patterns:
-              type: array
               items:
                 type: object
                 properties:
                   id:
                     type: string
-                  type:
+                  order:
                     type: string
                     enum:
-                      - route
+                      - integer
                 required:
                   - id
-                  - type
+                  - order
+            route_patterns:
+              type: array
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    order:
+                      type: string
+                      enum:
+                        - integer
+                  required:
+                    - id
+                    - order
             line:
               type: object
               properties:
