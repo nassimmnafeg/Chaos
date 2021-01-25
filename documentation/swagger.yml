@@ -2609,6 +2609,7 @@ components:
                 required:
                   - id
                   - order
+              minItems: 1
             route_patterns:
               type: array
               items:
@@ -2624,6 +2625,8 @@ components:
                   required:
                     - id
                     - order
+                minItems: 2
+              minItems: 1
             line:
               type: object
               properties:
