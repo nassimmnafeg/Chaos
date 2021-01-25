@@ -439,6 +439,11 @@ one_objectTC_generic_fields = {
     'type': fields.Raw
 }
 
+one_objectTC_order_fields = {
+    'id': fields.Raw(attribute='uri'),
+    'order': fields.Raw
+}
+
 one_objectTC_fields = deepcopy(one_objectTC_generic_fields)
 one_objectTC_fields['name'] = FieldObjectName()
 
@@ -454,12 +459,28 @@ line_section_fields = {
                          display_empty=False),
 }
 
+rail_section_fields = {
+    'line': fields.Nested(one_objectTC_fields, display_null=False),
+    'start_point': fields.Nested(one_objectTC_fields, display_null=False),
+    'end_point': fields.Nested(one_objectTC_fields, display_null=False),
+    'blocked_stop_areas': fields.List(
+        fields.Nested(one_objectTC_order_fields, display_null=False),
+        display_empty=False),
+    'route_patterns': fields.List(
+        fields.List(fields.Nested(one_objectTC_order_fields, display_null=False),
+                    display_empty=False)),
+}
+
 objectTC_fields = {
     'id': fields.Raw(attribute='uri'),
     'type': fields.Raw,
     'name': FieldObjectName(),
     'line_section': fields.Nested(
         line_section_fields,
+        display_null=False,
+        allow_null=True),
+    'rail_section': fields.Nested(
+        rail_section_fields,
         display_null=False,
         allow_null=True)
 }
