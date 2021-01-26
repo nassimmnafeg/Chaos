@@ -1837,6 +1837,13 @@ class PTobject(TimestampMixin, db.Model):
         self.line_section = line_section
         db.session.add(line_section)
 
+    def insert_rail_section(self, rail_section):
+        """
+        Adds a line_section in an object.
+        """
+        self.rail_section = rail_section
+        db.session.add(rail_section)
+
     @classmethod
     def get(cls, id):
         return cls.query.filter_by(id=id).first_or_404()

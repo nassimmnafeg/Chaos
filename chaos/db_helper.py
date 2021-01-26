@@ -47,7 +47,7 @@ def manage_pt_object_without_line_section(navitia, db_objects, json_attribute, j
     pt_object_dict = dict()
     if json_attribute in json_data:
         for pt_object_json in json_data[json_attribute]:
-            if pt_object_json["type"] == 'line_section':
+            if pt_object_json["type"] in ['line_section', 'rail_section']:
                 continue
             try:
                 ptobject = fill_and_get_pt_object(navitia, pt_object_dict, pt_object_json, False)
@@ -99,7 +99,6 @@ def manage_tags(disruption, json):
     for diff in difference:
         tag = tags_db[diff]
         disruption.tags.remove(tag)
-
 
 def fill_and_add_line_section(navitia, all_objects, pt_object_json):
     """
@@ -169,6 +168,61 @@ def fill_and_add_line_section(navitia, all_objects, pt_object_json):
             raise
 
     ptobject.insert_line_section(line_section)
+    return ptobject
+
+def fill_and_add_rail_section(navitia, all_objects, pt_object_json):
+    """
+    :param navitia: Class Navitia
+    :param all_objects: dictionary of objects to be added in this session
+    :param pt_object_json: Flux which contains json information of pt_object
+    :return: pt_object and modify all_objects param
+    """
+    ptobject = models.PTobject()
+    mapper.fill_from_json(ptobject, pt_object_json, mapper.object_mapping)
+
+    # Here we treat all the objects in rail_section like line, start_point, end_point
+    if 'rail_section' not in pt_object_json:
+        raise exceptions.InvalidJson('Object of type rail_section must have a rail_section entry')
+    rail_section_json = pt_object_json['rail_section']
+    #exit(rail_section_json)
+
+    ptobject.uri = ":".join((rail_section_json['line']['id'], ptobject.id))
+
+    rail_section = models.RailSection(ptobject.id)
+
+    try:
+        rail_object = fill_and_get_pt_object(navitia, all_objects, rail_section_json['line'])
+    except exceptions.ObjectUnknown:
+        raise exceptions.ObjectUnknown(
+            '{} {} doesn\'t exist'.format(
+                rail_section_json['line']['type'],
+                rail_section_json['line']['id']))
+
+    rail_section.line = rail_object
+
+    try:
+        start_object = fill_and_get_pt_object(navitia, all_objects, rail_section_json['start_point'])
+    except exceptions.ObjectUnknown:
+        raise exceptions.ObjectUnknown(
+            '{} {} doesn\'t exist'.format(
+                rail_section_json['start_point']['type'],
+                rail_section_json['start_point']['id']))
+    rail_section.start_point = start_object
+
+    try:
+        end_object = fill_and_get_pt_object(navitia, all_objects, rail_section_json['end_point'])
+    except exceptions.ObjectUnknown:
+        raise exceptions.ObjectUnknown(
+            '{} {} doesn\'t exist'.format(
+                rail_section_json['end_point']['type'],
+                rail_section_json['end_point']['id']))
+    rail_section.end_point = end_object
+
+    # Here we manage blocked_stop_areas in line_section
+    rail_section.blocked_stop_areas = rail_section_json["blocked_stop_areas"]
+    rail_section.route_patterns = rail_section_json["route_patterns"]
+
+    ptobject.insert_rail_section(rail_section)
     return ptobject
 
 def clean_message(msg, type=''):
@@ -293,6 +347,13 @@ def create_or_update_impact(disruption, json_impact, navitia, impact_id=None):
             if pt_object_json["type"] == 'line_section':
                 try:
                     ptobject = fill_and_add_line_section(navitia, all_objects, pt_object_json)
+                except exceptions.ObjectUnknown as xxx_todo_changeme:
+                    exceptions.InvalidJson = xxx_todo_changeme
+                    raise
+                impact_bd.objects.append(ptobject)
+            if pt_object_json["type"] == 'rail_section':
+                try:
+                    ptobject = fill_and_add_rail_section(navitia, all_objects, pt_object_json)
                 except exceptions.ObjectUnknown as xxx_todo_changeme:
                     exceptions.InvalidJson = xxx_todo_changeme
                     raise
