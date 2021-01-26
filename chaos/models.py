@@ -2034,6 +2034,38 @@ class LineSection(TimestampMixin, db.Model):
     def get_by_ids(cls, ids):
         return cls.query.filter(cls.object_id.in_(ids)).all()
 
+class RailSection(TimestampMixin, db.Model):
+    __tablename__ = 'rail_section'
+    id = db.Column(UUID, primary_key=True)
+    line_object_id = db.Column(UUID, db.ForeignKey(PTobject.id), nullable=False)
+    start_object_id = db.Column(UUID, db.ForeignKey(PTobject.id), nullable=False)
+    end_object_id = db.Column(UUID, db.ForeignKey(PTobject.id), nullable=False)
+    object_id = db.Column(UUID, db.ForeignKey(PTobject.id))
+    line = db.relationship('PTobject', foreign_keys=line_object_id)
+    start_point = db.relationship('PTobject', foreign_keys=start_object_id, lazy="joined")
+    end_point = db.relationship('PTobject', foreign_keys=end_object_id, lazy="joined")
+    blocked_stop_areas = db.Column(db.Text, unique=False, nullable=False)
+    route_patterns = db.Column(db.Text, unique=False, nullable=False)
+
+    def __repr__(self):
+        return '<RailSection %r>' % self.id
+
+    def __init__(self, object_id=None):
+        self.id = str(uuid.uuid1())
+        self.object_id = object_id
+
+    @classmethod
+    def get(cls, id):
+        return cls.query.filter_by(id=id).first_or_404()
+
+    @classmethod
+    def get_by_object_id(cls, object_id):
+        return cls.query.filter_by(object_id=object_id).first()
+
+    @classmethod
+    def get_by_ids(cls, ids):
+        return cls.query.filter(cls.object_id.in_(ids)).all()
+
 
 class Pattern(TimestampMixin, db.Model):
     """
