@@ -24,9 +24,21 @@ def upgrade():
     sa.Column('end_object_id', postgresql.UUID(), nullable=False),
     sa.Column('blocked_stop_areas', sa.Text(), nullable=False),
     sa.Column('route_patterns', sa.Text(), nullable=False),
+    sa.Column('object_id', postgresql.UUID(), nullable=True),
+    sa.ForeignKeyConstraint(['line_object_id'], [u'pt_object.id'], ),
+    sa.ForeignKeyConstraint(['object_id'], [u'pt_object.id'], ),
+    sa.ForeignKeyConstraint(['start_object_id'], [u'pt_object.id'], ),
+    sa.ForeignKeyConstraint(['end_object_id'], [u'pt_object.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.execute("COMMIT")  # See https://bitbucket.org/zzzeek/alembic/issue/123
+    op.execute("ALTER TYPE pt_object_type ADD VALUE 'rail_section'")
 
 
 def downgrade():
     op.drop_table('rail_section')
+    op.execute("ALTER TABLE pt_object ALTER COLUMN type TYPE text")
+    op.execute("DELETE FROM pt_object WHERE  type='rail_section'")
+    op.execute("DROP TYPE pt_object_type")
+    op.execute("CREATE TYPE pt_object_type AS ENUM ('network', 'stop_area', 'line', 'line_section','route', 'stop_point')")
+    op.execute("ALTER TABLE pt_object ALTER COLUMN type TYPE pt_object_type USING type::pt_object_type")

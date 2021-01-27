@@ -62,6 +62,7 @@ PtObjectType = db.Enum(
     'stop_area',
     'line',
     'line_section',
+    'rail_section',
     'route',
     'stop_point',
     name='pt_object_type'
@@ -1821,6 +1822,10 @@ class PTobject(TimestampMixin, db.Model):
                                    foreign_keys='LineSection.object_id',
                                    backref='pt_object',
                                    uselist=False)
+    rail_section = db.relationship('RailSection',
+                                   foreign_keys='RailSection.object_id',
+                                   backref='pt_object',
+                                   uselist=False)
 
     def __repr__(self):
         return '<PTobject %r>' % self.id
@@ -1839,7 +1844,7 @@ class PTobject(TimestampMixin, db.Model):
 
     def insert_rail_section(self, rail_section):
         """
-        Adds a line_section in an object.
+        Adds a rail_section in an object.
         """
         self.rail_section = rail_section
         db.session.add(rail_section)
