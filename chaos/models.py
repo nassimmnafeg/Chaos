@@ -1334,7 +1334,7 @@ class Impact(TimestampMixin, db.Model):
 
     def insert_object(self, object):
         """
-        Adds an objectTC in a imapct.
+        Adds an objectTC in a impact.
         """
         self.objects.append(object)
         db.session.add(object)
@@ -1344,7 +1344,7 @@ class Impact(TimestampMixin, db.Model):
 
     def insert_message(self, message):
         """
-        Adds an message in a imapct.
+        Adds an message in a impact.
         """
         self.messages.append(message)
         db.session.add(message)
