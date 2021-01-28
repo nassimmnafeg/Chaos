@@ -1,5 +1,6 @@
 # Copyright (c) since 2001, Kisio Digital and/or its affiliates. All rights reserved.
 
+import json
 from copy import deepcopy
 from flask_restful import fields, url_for, marshal
 from flask import current_app, request, g
@@ -28,6 +29,11 @@ class FieldDate(fields.Raw):
             return value.strftime('%Y-%m-%d')
         return None
 
+class FieldJsonData(fields.Raw):
+    def format(self, value):
+        if value:
+            return json.loads(value)
+        return None
 
 class CustomImpacts(fields.Raw):
     def output(self, key, val):
@@ -463,12 +469,8 @@ rail_section_fields = {
     'line': fields.Nested(one_objectTC_fields, display_null=False),
     'start_point': fields.Nested(one_objectTC_fields, display_null=False),
     'end_point': fields.Nested(one_objectTC_fields, display_null=False),
-    'blocked_stop_areas': fields.List(
-        fields.Nested(one_objectTC_order_fields, display_null=False),
-        display_empty=False),
-    'route_patterns': fields.List(
-        fields.List(fields.Nested(one_objectTC_order_fields, display_null=False),
-                    display_empty=False)),
+    'blocked_stop_areas': FieldJsonData,
+    'route_patterns': FieldJsonData,
 }
 
 objectTC_fields = {

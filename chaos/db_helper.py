@@ -1,5 +1,6 @@
 # Copyright (c) since 2001, Kisio Digital and/or its affiliates. All rights reserved.
 
+import json
 from chaos import models, exceptions, mapper, db
 from utils import get_application_periods
 
@@ -219,8 +220,8 @@ def fill_and_add_rail_section(navitia, all_objects, pt_object_json):
     rail_section.end_point = end_object
 
     # Here we manage blocked_stop_areas in line_section
-    rail_section.blocked_stop_areas = rail_section_json["blocked_stop_areas"]
-    rail_section.route_patterns = rail_section_json["route_patterns"]
+    rail_section.blocked_stop_areas = json.dumps(rail_section_json["blocked_stop_areas"])
+    rail_section.route_patterns = json.dumps(rail_section_json["route_patterns"])
 
     ptobject.insert_rail_section(rail_section)
     return ptobject
