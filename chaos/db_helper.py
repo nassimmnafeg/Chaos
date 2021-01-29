@@ -191,15 +191,16 @@ def fill_and_add_rail_section(navitia, all_objects, pt_object_json):
 
     rail_section = models.RailSection(ptobject.id)
 
-    try:
-        rail_object = fill_and_get_pt_object(navitia, all_objects, rail_section_json['line'])
-    except exceptions.ObjectUnknown:
-        raise exceptions.ObjectUnknown(
-            '{} {} doesn\'t exist'.format(
-                rail_section_json['line']['type'],
-                rail_section_json['line']['id']))
+    if 'line' in rail_section_json:
+        try:
+            rail_object = fill_and_get_pt_object(navitia, all_objects, rail_section_json['line'])
+        except exceptions.ObjectUnknown:
+            raise exceptions.ObjectUnknown(
+                '{} {} doesn\'t exist'.format(
+                    rail_section_json['line']['type'],
+                    rail_section_json['line']['id']))
 
-    rail_section.line = rail_object
+        rail_section.line = rail_object
 
     try:
         start_object = fill_and_get_pt_object(navitia, all_objects, rail_section_json['start_point'])

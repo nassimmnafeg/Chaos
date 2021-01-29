@@ -132,7 +132,7 @@ rail_section_format = {
             'minItems': 1
         }
     },
-    'required': ['line', 'start_point', 'end_point', 'blocked_stop_areas', 'route_patterns']
+    'required': ['start_point', 'end_point', 'blocked_stop_areas', 'route_patterns']
 }
 
 object_input_format = {
