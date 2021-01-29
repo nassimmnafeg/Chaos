@@ -1534,62 +1534,6 @@ class Impact(TimestampMixin, db.Model):
         }
 
     @classmethod
-    def get_impacts_search_native_query(cls, query_parts=[]):
-
-        join_tables = []
-        join_tables.append('disruption AS d')
-        join_tables.append('LEFT JOIN impact i ON (i.disruption_id = d.id)')
-        join_tables.append('LEFT JOIN cause c ON (d.cause_id = c.id)')
-        join_tables.append('LEFT JOIN category ctg ON (c.category_id = ctg.id)')
-        join_tables.append('LEFT JOIN associate_wording_cause awc ON (c.id = awc.cause_id)')
-        join_tables.append('LEFT JOIN severity AS s ON (s.id = i.severity_id)')
-        join_tables.append('LEFT JOIN wording AS cw ON (awc.wording_id = cw.id)')
-        join_tables.append('LEFT JOIN associate_wording_severity aws ON (s.id = aws.severity_id)')
-        join_tables.append('LEFT JOIN wording AS sw ON (aws.wording_id = sw.id)')
-        join_tables.append('LEFT JOIN contributor AS contrib ON (contrib.id = d.contributor_id)')
-        join_tables.append('LEFT JOIN associate_impact_pt_object AS aipto ON (aipto.impact_id = i.id)')
-        join_tables.append('LEFT JOIN pt_object AS po ON (po.id = aipto.pt_object_id)')
-        join_tables.append('LEFT JOIN application_periods AS ap ON (ap.impact_id = i.id)')
-        join_tables.append('LEFT JOIN message AS m ON (m.impact_id = i.id)')
-        join_tables.append('LEFT JOIN channel AS ch ON (m.channel_id = ch.id)')
-        join_tables.append('LEFT JOIN channel_type AS cht ON (cht.channel_id = ch.id)')
-        join_tables.append('LEFT JOIN associate_message_meta AS amm ON (amm.message_id = m.id)')
-        join_tables.append('LEFT JOIN meta AS me ON (amm.meta_id = me.id)')
-        join_tables.append('LEFT JOIN pattern AS pa ON (pa.impact_id = i.id)')
-        join_tables.append('LEFT JOIN time_slot AS ts ON (ts.pattern_id = pa.id)')
-        join_tables.append('LEFT JOIN line_section AS ls ON (po.id = ls.object_id)')
-        join_tables.append('LEFT JOIN pt_object AS po_line ON (po_line.id = ls.line_object_id)')
-        join_tables.append('LEFT JOIN pt_object AS po_start ON (po_start.id = ls.start_object_id)')
-        join_tables.append('LEFT JOIN pt_object AS po_end ON (po_end.id = ls.end_object_id)')
-        join_tables.append('LEFT JOIN associate_line_section_route_object AS alsro ON (alsro.line_section_id = ls.id)')
-        join_tables.append('LEFT JOIN pt_object AS po_route ON (alsro.route_object_id = po_route.id)')
-        join_tables.append('LEFT JOIN associate_wording_line_section AS awls ON (awls.line_section_id = ls.id)')
-        join_tables.append('LEFT JOIN wording AS awlsw ON (awls.wording_id = awlsw.id)')
-
-        andwheres = [] if 'and_wheres' not in query_parts else query_parts['and_wheres']
-
-        columns = ','.join(query_parts['select_columns'])
-        tables = ' '.join(join_tables)
-        wheres = ' AND '.join(andwheres)
-
-        query = []
-        query.append('SELECT %s FROM %s WHERE %s' % (columns, tables, wheres))
-
-        if 'group_by' in query_parts:
-            query.append('GROUP BY %s' % (','.join(query_parts['group_by'])))
-
-        if 'order_by' in query_parts:
-            query.append('ORDER BY %s' % (','.join(query_parts['order_by'])))
-
-        if 'limit' in query_parts:
-            query.append('LIMIT %s' % (query_parts['limit']))
-
-        if 'offset' in query_parts:
-            query.append('OFFSET %s' % (query_parts['offset']))
-
-        return ' '.join(query)
-
-    @classmethod
     def count_all_with_post_filter(
             cls,
             contributor_id,
@@ -1702,6 +1646,10 @@ class Impact(TimestampMixin, db.Model):
         join_tables.append('LEFT JOIN pt_object AS po_route ON (alsro.route_object_id = po_route.id)')
         join_tables.append('LEFT JOIN associate_wording_line_section AS awls ON (awls.line_section_id = ls.id)')
         join_tables.append('LEFT JOIN wording AS awlsw ON (awls.wording_id = awlsw.id)')
+        join_tables.append('LEFT JOIN rail_section AS rs ON (po.id = rs.object_id)')
+        join_tables.append('LEFT JOIN pt_object AS por_line ON (por_line.id = rs.line_object_id)')
+        join_tables.append('LEFT JOIN pt_object AS por_start ON (por_start.id = rs.start_object_id)')
+        join_tables.append('LEFT JOIN pt_object AS por_end ON (por_end.id = rs.end_object_id)')
 
         andwheres = [] if 'and_wheres' not in query_parts else query_parts['and_wheres']
 
