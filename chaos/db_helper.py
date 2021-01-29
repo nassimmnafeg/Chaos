@@ -185,9 +185,8 @@ def fill_and_add_rail_section(navitia, all_objects, pt_object_json):
     if 'rail_section' not in pt_object_json:
         raise exceptions.InvalidJson('Object of type rail_section must have a rail_section entry')
     rail_section_json = pt_object_json['rail_section']
-    #exit(rail_section_json)
 
-    ptobject.uri = ":".join((rail_section_json['line']['id'], ptobject.id))
+    ptobject.uri = ":".join((rail_section_json['start_point']['id'], rail_section_json['end_point']['id'], ptobject.id))
 
     rail_section = models.RailSection(ptobject.id)
 
