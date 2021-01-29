@@ -1491,11 +1491,14 @@ class Impact(TimestampMixin, db.Model):
                 vars['pt_objects_uris'] = tuple(ptObjectIds)
 
                 if 'lines' in ptObjectFilter and ptObjectFilter['lines']:
-                    uri_filters.append('(po.type = :po_type_line_section AND po_line.uri IN :po_line_section_lines)')
+                    uri_filters.append('(po.type = :po_type_line_section AND po_line.uri IN :po_list_lines)')
                     bindparams['po_type_line_section'] = db.String
-                    bindparams['po_line_section_lines'] = db.String
                     vars['po_type_line_section'] = 'line_section'
-                    vars['po_line_section_lines'] = tuple(ptObjectFilter['lines'])
+                    uri_filters.append('(po.type = :po_type_rail_section AND por_line.uri IN :po_list_lines)')
+                    bindparams['po_type_rail_section'] = db.String
+                    bindparams['po_list_lines'] = db.String
+                    vars['po_type_rail_section'] = 'rail_section'
+                    vars['po_list_lines'] = tuple(ptObjectFilter['lines'])
                 andwheres.append('(' + ' OR '.join(uri_filters) + ')')
 
         if isinstance(cause_category_id, basestring) and cause_category_id:
@@ -1734,7 +1737,11 @@ class Impact(TimestampMixin, db.Model):
                 'po_start.uri AS line_section_start_uri, po_start.type AS line_section_start_type',
                 'po_end.uri AS line_section_end_uri, po_end.type AS line_section_end_type',
                 'po_route.id AS po_route_id, po_route.uri AS po_route_uri, po_route.type AS po_route_type',
-                'awlsw.id AS awlsw_id, awlsw.key AS awlsw_key, awlsw.value AS awlsw_value'
+                'awlsw.id AS awlsw_id, awlsw.key AS awlsw_key, awlsw.value AS awlsw_value',
+                'rs.id AS rail_section_id',
+                'por_line.uri AS rail_section_line_uri, por_line.type AS rail_section_line_type',
+                'por_start.uri AS rail_section_start_uri, por_start.type AS rail_section_start_type',
+                'por_end.uri AS rail_section_end_uri, por_end.type AS rail_section_end_type'
             ]
         query_parts['and_wheres'].append('i.id IN :impact_ids')
         query_parts['order_by'] = ['ap.end_date','i.id', 'po.type','po.uri']
