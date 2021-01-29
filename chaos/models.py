@@ -2049,7 +2049,7 @@ class LineSection(TimestampMixin, db.Model):
 class RailSection(TimestampMixin, db.Model):
     __tablename__ = 'rail_section'
     id = db.Column(UUID, primary_key=True)
-    line_object_id = db.Column(UUID, db.ForeignKey(PTobject.id), nullable=False)
+    line_object_id = db.Column(UUID, db.ForeignKey(PTobject.id), nullable=True)
     start_object_id = db.Column(UUID, db.ForeignKey(PTobject.id), nullable=False)
     end_object_id = db.Column(UUID, db.ForeignKey(PTobject.id), nullable=False)
     object_id = db.Column(UUID, db.ForeignKey(PTobject.id))

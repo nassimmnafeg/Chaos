@@ -19,7 +19,7 @@ def upgrade():
     sa.Column('id', postgresql.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('line_object_id', postgresql.UUID(), nullable=False),
+    sa.Column('line_object_id', postgresql.UUID(), nullable=True),
     sa.Column('start_object_id', postgresql.UUID(), nullable=False),
     sa.Column('end_object_id', postgresql.UUID(), nullable=False),
     sa.Column('blocked_stop_areas', sa.Text(), nullable=False),
