@@ -1741,7 +1741,9 @@ class Impact(TimestampMixin, db.Model):
                 'rs.id AS rail_section_id',
                 'por_line.uri AS rail_section_line_uri, por_line.type AS rail_section_line_type',
                 'por_start.uri AS rail_section_start_uri, por_start.type AS rail_section_start_type',
-                'por_end.uri AS rail_section_end_uri, por_end.type AS rail_section_end_type'
+                'por_end.uri AS rail_section_end_uri, por_end.type AS rail_section_end_type',
+                'rs.blocked_stop_areas AS rail_section_blocked_stop_areas',
+                'rs.route_patterns AS rail_section_route_patterns'
             ]
         query_parts['and_wheres'].append('i.id IN :impact_ids')
         query_parts['order_by'] = ['ap.end_date','i.id', 'po.type','po.uri']
