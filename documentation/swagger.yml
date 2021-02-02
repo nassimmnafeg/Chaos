@@ -2644,7 +2644,6 @@ components:
             - end_point
             - blocked_stop_areas
             - route_patterns
-            - line
     disruption_impact_message:
       type: object
       required:
