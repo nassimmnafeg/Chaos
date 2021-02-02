@@ -38,7 +38,7 @@ def upgrade():
 def downgrade():
     op.drop_table('rail_section')
     op.execute("ALTER TABLE pt_object ALTER COLUMN type TYPE text")
-    op.execute("DELETE FROM pt_object WHERE  type='rail_section'")
+    op.execute("DELETE FROM pt_object WHERE type='rail_section'")
     op.execute("DROP TYPE pt_object_type")
     op.execute("CREATE TYPE pt_object_type AS ENUM ('network', 'stop_area', 'line', 'line_section','route', 'stop_point')")
     op.execute("ALTER TABLE pt_object ALTER COLUMN type TYPE pt_object_type USING type::pt_object_type")
