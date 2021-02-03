@@ -2456,6 +2456,7 @@ components:
             oneOf:
               - $ref: "#/components/schemas/impact_object"
               - $ref: "#/components/schemas/impact_object_line_section"
+              - $ref: "#/components/schemas/impact_object_rail_section"
           uniqueItems: true
           minItems: 1
     impact_object:
@@ -2553,6 +2554,96 @@ components:
             - start_point
             - end_point
             - line
+    impact_object_rail_section:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          description: Impacted PT object ID in navitia
+          type: string
+          maxLength: 250
+        type:
+          description: Impacted PT object type in navitia
+          type: string
+          enum:
+            - rail_section
+        rail_section:
+          type: object
+          properties:
+            start_point:
+              type: object
+              properties:
+                id:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                    - stop_area
+              required:
+                - id
+                - type
+            end_point:
+              type: object
+              properties:
+                id:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                    - stop_area
+              required:
+                - id
+                - type
+            blocked_stop_areas:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  order:
+                    type: integer
+                    minimum: 0
+                required:
+                  - id
+                  - order
+              minItems: 1
+            route_patterns:
+              type: array
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    order:
+                      type: integer
+                      minimum: 0
+                  required:
+                    - id
+                    - order
+                minItems: 2
+              minItems: 1
+            line:
+              type: object
+              properties:
+                id:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                    - line
+              required:
+                - id
+                - type
+          required:
+            - start_point
+            - end_point
+            - blocked_stop_areas
+            - route_patterns
     disruption_impact_message:
       type: object
       required:
@@ -2716,6 +2807,7 @@ components:
             oneOf:
               - $ref: "#/components/schemas/impact_object"
               - $ref: "#/components/schemas/impact_object_line_section"
+              - $ref: "#/components/schemas/impact_object_rail_section"
           uniqueItems: true
           minItems: 1
     disruption_in_impact:
@@ -2953,6 +3045,7 @@ components:
             oneOf:
               - $ref: "#/components/schemas/impact_object"
               - $ref: "#/components/schemas/impact_object_line_section"
+              - $ref: "#/components/schemas/impact_object_rail_section"
         send_notifications:
           description: If notification should be send or not
           type: boolean
