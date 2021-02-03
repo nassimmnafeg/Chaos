@@ -175,7 +175,7 @@ def fill_and_add_rail_section(navitia, all_objects, pt_object_json):
     """
     :param navitia: Class Navitia
     :param all_objects: dictionary of objects to be added in this session
-    :param pt_object_json: Flux which contains json information of pt_object
+    :param pt_object_json: Flux which contains json information of ordered pt_object
     :return: pt_object and modify all_objects param
     """
     ptobject = models.PTobject()
