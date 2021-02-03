@@ -17,7 +17,10 @@ def fill_and_get_pt_object(navitia, all_objects, json, add_to_db=True):
         return all_objects[json["id"]]
 
     if not navitia.get_pt_object(json['id'], json['type']):
-        raise exceptions.ObjectUnknown()
+        raise exceptions.ObjectUnknown(
+            '{} {} doesn\'t exist'.format(
+                json['type'],
+                json['id']))
 
     pt_object = models.PTobject.get_pt_object_by_uri(json["id"])
 
@@ -30,6 +33,7 @@ def fill_and_get_pt_object(navitia, all_objects, json, add_to_db=True):
     if add_to_db:
         db.session.add(pt_object)
     all_objects[json["id"]] = pt_object
+
     return pt_object
 
 
@@ -50,10 +54,8 @@ def manage_pt_object_without_line_section(navitia, db_objects, json_attribute, j
         for pt_object_json in json_data[json_attribute]:
             if pt_object_json["type"] in ['line_section', 'rail_section']:
                 continue
-            try:
-                ptobject = fill_and_get_pt_object(navitia, pt_object_dict, pt_object_json, False)
-            except exceptions.ObjectUnknown:
-                raise exceptions.ObjectUnknown("ptobject '{}' doesn't exist".format(pt_object_json['id']))
+
+            ptobject = fill_and_get_pt_object(navitia, pt_object_dict, pt_object_json, False)
 
             if ptobject.uri not in pt_object_db:
                 db_objects.append(ptobject)
@@ -120,43 +122,16 @@ def fill_and_add_line_section(navitia, all_objects, pt_object_json):
 
     line_section = models.LineSection(ptobject.id)
 
-    try:
-        line_object = fill_and_get_pt_object(navitia, all_objects, line_section_json['line'])
-    except exceptions.ObjectUnknown:
-        raise exceptions.ObjectUnknown(
-            '{} {} doesn\'t exist'.format(
-                line_section_json['line']['type'],
-                line_section_json['line']['id']))
-
-    line_section.line = line_object
-
-    try:
-        start_object = fill_and_get_pt_object(navitia, all_objects, line_section_json['start_point'])
-    except exceptions.ObjectUnknown:
-        raise exceptions.ObjectUnknown(
-            '{} {} doesn\'t exist'.format(
-                line_section_json['start_point']['type'],
-                line_section_json['start_point']['id']))
-    line_section.start_point = start_object
-
-    try:
-        end_object = fill_and_get_pt_object(navitia, all_objects, line_section_json['end_point'])
-    except exceptions.ObjectUnknown:
-        raise exceptions.ObjectUnknown(
-            '{} {} doesn\'t exist'.format(
-                line_section_json['end_point']['type'],
-                line_section_json['end_point']['id']))
-    line_section.end_point = end_object
+    line_section.line = fill_and_get_pt_object(navitia, all_objects, line_section_json['line'])
+    line_section.start_point = fill_and_get_pt_object(navitia, all_objects, line_section_json['start_point'])
+    line_section.end_point = fill_and_get_pt_object(navitia, all_objects, line_section_json['end_point'])
 
     # Here we manage routes in line_section
     #"routes":[{"id":"route:MTD:9", "type": "route"}, {"id":"route:MTD:Nav23", "type": "route"}]
     if 'routes' in line_section_json:
         for route in line_section_json["routes"]:
-            try:
-                route_object = fill_and_get_pt_object(navitia, all_objects, route, True)
-                line_section.routes.append(route_object)
-            except exceptions.ObjectUnknown:
-                raise exceptions.ObjectUnknown('{} {} doesn\'t exist'.format(route['type'], route['id']))
+            route_object = fill_and_get_pt_object(navitia, all_objects, route, True)
+            line_section.routes.append(route_object)
 
     # Fill wordings from json
     #"meta":[{"key":"direction", "value": "1234"}, {"key":"direction", "value": "5678"}]
@@ -191,33 +166,10 @@ def fill_and_add_rail_section(navitia, all_objects, pt_object_json):
     rail_section = models.RailSection(ptobject.id)
 
     if 'line' in rail_section_json:
-        try:
-            rail_object = fill_and_get_pt_object(navitia, all_objects, rail_section_json['line'])
-        except exceptions.ObjectUnknown:
-            raise exceptions.ObjectUnknown(
-                '{} {} doesn\'t exist'.format(
-                    rail_section_json['line']['type'],
-                    rail_section_json['line']['id']))
+        rail_section.line = fill_and_get_pt_object(navitia, all_objects, rail_section_json['line'])
 
-        rail_section.line = rail_object
-
-    try:
-        start_object = fill_and_get_pt_object(navitia, all_objects, rail_section_json['start_point'])
-    except exceptions.ObjectUnknown:
-        raise exceptions.ObjectUnknown(
-            '{} {} doesn\'t exist'.format(
-                rail_section_json['start_point']['type'],
-                rail_section_json['start_point']['id']))
-    rail_section.start_point = start_object
-
-    try:
-        end_object = fill_and_get_pt_object(navitia, all_objects, rail_section_json['end_point'])
-    except exceptions.ObjectUnknown:
-        raise exceptions.ObjectUnknown(
-            '{} {} doesn\'t exist'.format(
-                rail_section_json['end_point']['type'],
-                rail_section_json['end_point']['id']))
-    rail_section.end_point = end_object
+    rail_section.start_point = fill_and_get_pt_object(navitia, all_objects, rail_section_json['start_point'])
+    rail_section.end_point = fill_and_get_pt_object(navitia, all_objects, rail_section_json['end_point'])
 
     # Here we manage blocked_stop_areas in line_section
     rail_section.blocked_stop_areas = json.dumps(rail_section_json["blocked_stop_areas"])
@@ -348,15 +300,15 @@ def create_or_update_impact(disruption, json_impact, navitia, impact_id=None):
             if pt_object_json["type"] == 'line_section':
                 try:
                     ptobject = fill_and_add_line_section(navitia, all_objects, pt_object_json)
-                except exceptions.ObjectUnknown as xxx_todo_changeme:
-                    exceptions.InvalidJson = xxx_todo_changeme
+                except exceptions.ObjectUnknown as object_unknown_exception:
+                    exceptions.InvalidJson = object_unknown_exception
                     raise
                 impact_bd.objects.append(ptobject)
             if pt_object_json["type"] == 'rail_section':
                 try:
                     ptobject = fill_and_add_rail_section(navitia, all_objects, pt_object_json)
-                except exceptions.ObjectUnknown as xxx_todo_changeme:
-                    exceptions.InvalidJson = xxx_todo_changeme
+                except exceptions.ObjectUnknown as object_unknown_exception:
+                    exceptions.InvalidJson = object_unknown_exception
                     raise
                 impact_bd.objects.append(ptobject)
      # Severity
